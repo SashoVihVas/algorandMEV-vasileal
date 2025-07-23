@@ -1,3 +1,10 @@
+import pathlib
+import sys
+import os
+
+# Add the 'contract' directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 import time
 import algosdk
 import pyteal as pt
@@ -54,7 +61,10 @@ def generate_data():
     # client2 = get_testnet_TUM_algod_client()
     # client2 = get_testnet_algod_client()
 
-    with open("../last_executed/artifacts/contract.json") as f:
+    script_path = pathlib.Path(__file__).resolve().parent
+    contract_json_path = script_path.parent / "last_executed" / "artifacts" / "contract.json"
+
+    with open(contract_json_path) as f:
         js = f.read()
     contract = abi.Contract.from_json(js)
 
