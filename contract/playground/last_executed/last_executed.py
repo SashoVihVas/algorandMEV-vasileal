@@ -3,7 +3,7 @@ import pyteal as pt
 import algokit_utils
 import base64
 
-# from beaker import Application, Authorize, GlobalStateValue, sandbox
+# from beaker import Application, Authorize, GlobalStateValue, localnet as sandbox
 # from beaker.client import ApplicationClient
 from algosdk import mnemonic, account, transaction, atomic_transaction_composer, abi
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
@@ -13,7 +13,7 @@ from beaker import (
     Application,
     Authorize,
     GlobalStateValue,
-    sandbox,
+    localnet as sandbox,
     unconditional_create_approval,
 )
 import os

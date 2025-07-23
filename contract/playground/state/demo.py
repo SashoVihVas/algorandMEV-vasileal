@@ -1,6 +1,6 @@
 from algokit_utils import LogicError
 import application
-from beaker import client, sandbox
+from beaker import client, localnet as sandbox
 
 
 def main() -> None:

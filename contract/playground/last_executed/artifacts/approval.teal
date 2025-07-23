@@ -1,6 +1,6 @@
 #pragma version 8
 intcblock 0 1
-bytecblock 0x636f756e746572 0x151f7c75 0x
+bytecblock 0x636f756e746572 0x 0x151f7c75
 txn NumAppArgs
 intc_0 // 0
 ==
@@ -23,12 +23,7 @@ intc_0 // 0
 !=
 &&
 assert
-callsub decrement_2
-store 1
-bytec_1 // 0x151f7c75
-load 1
-concat
-log
+callsub decrementcaster_4
 intc_1 // 1
 return
 main_l5:
@@ -40,12 +35,7 @@ intc_0 // 0
 !=
 &&
 assert
-callsub increment_1
-store 0
-bytec_1 // 0x151f7c75
-load 0
-concat
-log
+callsub incrementcaster_3
 intc_1 // 1
 return
 main_l6:
@@ -74,7 +64,7 @@ retsub
 // increment
 increment_1:
 proto 0 1
-bytec_2 // ""
+bytec_1 // ""
 txn Sender
 global CreatorAddress
 ==
@@ -98,7 +88,7 @@ retsub
 // decrement
 decrement_2:
 proto 0 1
-bytec_2 // ""
+bytec_1 // ""
 txn Sender
 global CreatorAddress
 ==
@@ -117,4 +107,28 @@ extract 6 0
 frame_dig 0
 concat
 frame_bury 0
+retsub
+
+// increment_caster
+incrementcaster_3:
+proto 0 0
+bytec_1 // ""
+callsub increment_1
+frame_bury 0
+bytec_2 // 0x151f7c75
+frame_dig 0
+concat
+log
+retsub
+
+// decrement_caster
+decrementcaster_4:
+proto 0 0
+bytec_1 // ""
+callsub decrement_2
+frame_bury 0
+bytec_2 // 0x151f7c75
+frame_dig 0
+concat
+log
 retsub

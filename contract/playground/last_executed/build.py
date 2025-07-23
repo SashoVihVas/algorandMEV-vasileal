@@ -1,4 +1,10 @@
 # Build the sample contract in this directory using Beaker and output to ./artifacts
+import sys
+import os
+
+# Add the project's root directory to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 from pathlib import Path
 
 import last_executed
