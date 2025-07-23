@@ -1,3 +1,10 @@
+import pathlib
+import sys
+import os
+
+# Add the 'contract' directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 import time
 import algosdk
 import pyteal as pt
@@ -35,9 +42,9 @@ confirmed_rounds_2 = []
 
 
 def generate_data():
-    mnemonic_1 = "margin tackle shift airport stadium stool bounce step staff speak debate what resource era abuse evil draft answer tornado slide solid legend pond abstract crystal"
+    mnemonic_1 = "kitchen subway tomato hire inspire pepper camera frog about kangaroo bunker express length song act oven world quality around elegant lion chimney enough ability prepare"
     private_key = mnemonic.to_private_key(mnemonic_1)
-    app_id = 1001  # 238906986
+    app_id = 1003  # 238906986
 
     # Initialize counters for increment and decrement functions
     increment_count = 0
@@ -56,7 +63,10 @@ def generate_data():
     client2 = get_test_non_part_2()
     # client2 = get_testnet_algod_client()
 
-    with open("../last_executed/artifacts/contract.json") as f:
+    script_path = pathlib.Path(__file__).resolve().parent
+    contract_json_path = script_path.parent / "last_executed" / "artifacts" / "contract.json"
+
+    with open(contract_json_path) as f:
         js = f.read()
     contract = abi.Contract.from_json(js)
 
