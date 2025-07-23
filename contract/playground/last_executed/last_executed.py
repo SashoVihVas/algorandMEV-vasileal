@@ -1,3 +1,11 @@
+import sys
+import os
+
+# Add the 'contract' directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+import pathlib
+
 import algosdk
 import pyteal as pt
 import algokit_utils
@@ -78,10 +86,17 @@ def demo() -> None:
     local_schema = transaction.StateSchema(num_uints=1, num_byte_slices=1)
     global_schema = transaction.StateSchema(num_uints=1, num_byte_slices=1)
 
-    with open("artifacts/approval.teal", "r") as f:
+    # Get the directory where the current script is located
+    script_dir = pathlib.Path(__file__).resolve().parent
+
+    # Build the full paths to the teal files
+    approval_path = script_dir / "artifacts" / "approval.teal"
+    clear_path = script_dir / "artifacts" / "clear.teal"
+
+    with open(approval_path, "r") as f:
         approval_program = f.read()
 
-    with open("artifacts/clear.teal", "r") as f:
+    with open(clear_path, "r") as f:
         clear_program = f.read()
 
     approval_result = client.compile(approval_program)
