@@ -40,7 +40,7 @@ load_dotenv()  # take environment variables from .env.
 def generate_data():
     mnemonic_1 = "rifle door book aim slogan joke load hair athlete shock castle lion speed rocket distance spawn add badge genius zero chef enforce suffer absent frost"
     private_key = mnemonic.to_private_key(mnemonic_1)
-    app_id = 34  # 238906986
+    app_id = 1003  # 238906986
 
     # Initialize counters for increment and decrement functions
     increment_count = 0
