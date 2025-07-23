@@ -71,7 +71,7 @@ def generate_data():
     print("Initial Value: ", print_global_state(client1, app_id), "\n")
     print(account.address_from_private_key(private_key))
 
-    for i in range(500):
+    for i in range(50):
         previous_value = print_global_state(client2, app_id)
         print("Previous Value:", previous_value)
         atc1 = AtomicTransactionComposer()
