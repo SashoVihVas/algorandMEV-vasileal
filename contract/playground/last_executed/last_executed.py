@@ -74,7 +74,7 @@ def demo() -> None:
         "Authorization": "Bearer 97361fdc801fe9fd7f2ae87fa4ea5dc8b9b6ce7380c230eaf5494c4cb5d38d61"
     }
     address = (
-        "http://192.168.30.4:4100"  # "https://testnet-algorand.api.purestake.io/ps2"
+        "http://192.168.30.2:4100"  # "https://testnet-algorand.api.purestake.io/ps2"
     )
     # demonstration purposes only, never use mnemonics in code
     mnemonic_1 = "kitchen subway tomato hire inspire pepper camera frog about kangaroo bunker express length song act oven world quality around elegant lion chimney enough ability prepare"
