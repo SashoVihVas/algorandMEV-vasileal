@@ -38,8 +38,8 @@ load_dotenv()  # take environment variables from .env.
 
 
 def generate_data():
-    mnemonic_1 = "rifle door book aim slogan joke load hair athlete shock castle lion speed rocket distance spawn add badge genius zero chef enforce suffer absent frost"
-    private_key = mnemonic.to_private_key(mnemonic_1)
+    b64_private_key = "UK790krMFIp90Z02KuuLk+g6O5GOnQwSBYyqqMCw/w/z03/UuY2YCWL3xuu8RXC13ybK5QauZ+2hkgh+ZM2y/A=="
+    private_key = base64.b64decode(b64_private_key)
     app_id = 1003  # 238906986
 
     # Initialize counters for increment and decrement functions
