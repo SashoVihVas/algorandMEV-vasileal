@@ -90,7 +90,7 @@ def generate_data():
         note = str(time.time()).encode()  # Using the current timestamp as a note
         params2 = client2.suggested_params()
         params2.flat_fee = True
-        params2.fee = 100000
+        params2.fee = 10000
         atc2.add_method_call(
             app_id=app_id,
             method=contract.get_method_by_name("decrement"),
