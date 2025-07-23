@@ -120,7 +120,7 @@ def demo() -> None:
     # sign transaction
     signed_create_txn = app_create_txn.sign(private_key)
     txid = client.send_transaction(signed_create_txn)
-    result = transaction.wait_for_confirmation(client, txid, 4)
+    result = transaction.wait_for_confirmation(client, txid, 10)
     app_id = result["application-index"]
     print(f"Created app with id: {app_id}")
 
