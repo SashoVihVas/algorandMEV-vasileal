@@ -1,3 +1,4 @@
+import argparse
 import pathlib
 import sys
 import os
@@ -36,8 +37,16 @@ import csv
 
 load_dotenv()  # take environment variables from .env.
 
+def create_algod_client_from_url(url: str) -> algod.AlgodClient:
+    """Creates an AlgodClient instance from a given URL."""
+    algod_token = ""
+    # Assuming the same auth token for custom URLs as in your utils
+    algod_headers = {
+        "Authorization": "Bearer 97361fdc801fe9fd7f2ae87fa4ea5dc8b9b6ce7380c230eaf5494c4cb5d38d61"
+    }
+    return algod.AlgodClient(algod_token, url, algod_headers)
 
-def generate_data():
+def generate_data(non_part_1_url: str | None = None, non_part_2_url: str | None = None):
     mnemonic_1 = "kitchen subway tomato hire inspire pepper camera frog about kangaroo bunker express length song act oven world quality around elegant lion chimney enough ability prepare"
     private_key = mnemonic.to_private_key(mnemonic_1)
     app_id = 1002  # 238906986
@@ -54,12 +63,19 @@ def generate_data():
     first_function = "None"
     color = ""
 
-    # client1 = get_testnet_algod_client()
-    client1 = get_test_non_part_1()
-    client2 = get_test_non_part_2()
-    # client1 = get_testnet_TUM_algod_client()
-    # client2 = get_testnet_TUM_algod_client()
-    # client2 = get_testnet_algod_client()
+    if non_part_1_url:
+        print(f"Using provided URL for client 1: {non_part_1_url}")
+        client1 = create_algod_client_from_url(non_part_1_url)
+    else:
+        print("Using default utils.py function for client 1.")
+        client1 = get_test_non_part_1()
+
+    if non_part_2_url:
+        print(f"Using provided URL for client 2: {non_part_2_url}")
+        client2 = create_algod_client_from_url(non_part_2_url)
+    else:
+        print("Using default utils.py function for client 2.")
+        client2 = get_test_non_part_2()
 
     script_path = pathlib.Path(__file__).resolve().parent
     contract_json_path = script_path.parent / "last_executed" / "artifacts" / "contract.json"
@@ -249,4 +265,19 @@ def print_address(mn):
 
 
 if __name__ == "__main__":
-    generate_data()
+    parser = argparse.ArgumentParser(
+        description="Run Algorand transaction experiment with optional node URLs."
+    )
+    parser.add_argument(
+        "--non-part-1",
+        type=str,
+        help="URL for the first non-participating node (e.g., http://192.168.30.4:4100)",
+    )
+    parser.add_argument(
+        "--non-part-2",
+        type=str,
+        help="URL for the second non-participating node (e.g., http://192.168.30.5:4100)",
+    )
+    args = parser.parse_args()
+
+    generate_data(non_part_1_url=args.non_part_1, non_part_2_url=args.non_part_2)
