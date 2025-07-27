@@ -44,19 +44,6 @@ def generate_data():
         default=1003,
         help="The app id of the submitted smart contract on the network",
     )
-    # ADDED: Optional command-line arguments for node URLs
-    parser.add_argument(
-        "--non-part-1",
-        type=str,
-        default=None,
-        help="URL of the first non-participating node (e.g., 'http://192.168.30.4:4100').",
-    )
-    parser.add_argument(
-        "--non-part-2",
-        type=str,
-        default=None,
-        help="URL of the second non-participating node (e.g., 'http://192.168.30.5:4100').",
-    )
     args = parser.parse_args()
 
     # --- Configuration ---
@@ -69,29 +56,9 @@ def generate_data():
     decrement_count = 0
     x_values, y_values, colors = [], [], []
 
-    # MODIFIED: Client Initialization Logic
-    # Define token and headers, mirroring the values in utils.py for custom clients
-    algod_token = ""
-    algod_headers = {
-        "Authorization": "Bearer 97361fdc801fe9fd7f2ae87fa4ea5dc8b9b6ce7380c230eaf5494c4cb5d38d61"
-    }
-
-    # Initialize client1: Use custom URL if provided, otherwise use default from utils
-    if args.non_part_1:
-        print(f"Using custom URL for client 1: {args.non_part_1}")
-        client1 = algod.AlgodClient(algod_token, args.non_part_1, algod_headers)
-    else:
-        print("Using default utility function for client 1.")
-        client1 = get_test_non_part_1()
-
-    # Initialize client2: Use custom URL if provided, otherwise use default from utils
-    if args.non_part_2:
-        print(f"Using custom URL for client 2: {args.non_part_2}")
-        client2 = algod.AlgodClient(algod_token, args.non_part_2, algod_headers)
-    else:
-        print("Using default utility function for client 2.")
-        client2 = get_test_non_part_2()
-
+    # Get clients for the two non-participating nodes
+    client1 = get_test_non_part_1()
+    client2 = get_test_non_part_2()
 
     # Load contract ABI
     script_path = pathlib.Path(__file__).resolve().parent
