@@ -1,6 +1,7 @@
 import pathlib
 import sys
 import os
+import argparse
 
 # Add the 'contract' directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -40,11 +41,36 @@ proposers_2 = []
 confirmed_rounds_1 = []
 confirmed_rounds_2 = []
 
+def create_algod_client_from_url(url: str) -> algod.AlgodClient:
+    """Creates an AlgodClient instance from a given URL."""
+    algod_token = ""
+    # Assuming the same auth token for custom URLs as in your utils
+    algod_headers = {
+        "Authorization": "Bearer 97361fdc801fe9fd7f2ae87fa4ea5dc8b9b6ce7380c230eaf5494c4cb5d38d61"
+    }
+    return algod.AlgodClient(algod_token, url, algod_headers)
 
-def generate_data():
-    mnemonic_1 = "kitchen subway tomato hire inspire pepper camera frog about kangaroo bunker express length song act oven world quality around elegant lion chimney enough ability prepare"
+
+def generate_data(
+    non_part_1_url: str | None = None,
+    non_part_2_url: str | None = None,
+    app_id_arg: int | None = None,
+    mnemonic_arg: str | None = None,
+):
+    # Define default values
+    default_mnemonic = "kitchen subway tomato hire inspire pepper camera frog about kangaroo bunker express length song act oven world quality around elegant lion chimney enough ability prepare"
+    default_app_id = 1002
+
+    # Use provided arguments or fall back to defaults
+    mnemonic_1 = mnemonic_arg if mnemonic_arg is not None else default_mnemonic
+    app_id = app_id_arg if app_id_arg is not None else default_app_id
+
+    print(f"--- Configuration ---")
+    print(f"Using App ID: {app_id}")
+    print(f"Using Mnemonic: {'Provided via CLI' if mnemonic_arg else 'Default'}")
+    print(f"---------------------\n")
+
     private_key = mnemonic.to_private_key(mnemonic_1)
-    app_id = 1002  # 238906986
 
     # Initialize counters for increment and decrement functions
     increment_count = 0
@@ -58,10 +84,19 @@ def generate_data():
     first_function = "None"
     color = ""
 
-    client1 = get_test_non_part_1()
-    # client1 = get_testnet_TUM_algod_client()
-    client2 = get_test_non_part_2()
-    # client2 = get_testnet_algod_client()
+    if non_part_1_url:
+        print(f"Using provided URL for client 1: {non_part_1_url}")
+        client1 = create_algod_client_from_url(non_part_1_url)
+    else:
+        print("Using default utils.py function for client 1.")
+        client1 = get_test_non_part_1()
+
+    if non_part_2_url:
+        print(f"Using provided URL for client 2: {non_part_2_url}")
+        client2 = create_algod_client_from_url(non_part_2_url)
+    else:
+        print("Using default utils.py function for client 2.")
+        client2 = get_test_non_part_2()
 
     script_path = pathlib.Path(__file__).resolve().parent
     contract_json_path = script_path.parent / "last_executed" / "artifacts" / "contract.json"
@@ -263,4 +298,34 @@ def print_address(mn):
 
 
 if __name__ == "__main__":
-    generate_data()
+    parser = argparse.ArgumentParser(
+        description="Run Algorand transaction experiment with optional node URLs, App ID, and Mnemonic."
+    )
+    parser.add_argument(
+        "--non-part-1",
+        type=str,
+        help="URL for the first non-participating node (e.g., http://192.168.30.4:4100)",
+    )
+    parser.add_argument(
+        "--non-part-2",
+        type=str,
+        help="URL for the second non-participating node (e.g., http://192.168.30.5:4100)",
+    )
+    parser.add_argument(
+        "--app-id",
+        type=int,
+        help="The ID of the application to interact with.",
+    )
+    parser.add_argument(
+        "--mnemonic",
+        type=str,
+        help="The mnemonic phrase of the account to sign transactions.",
+    )
+    args = parser.parse_args()
+
+    generate_data(
+        non_part_1_url=args.non_part_1,
+        non_part_2_url=args.non_part_2,
+        app_id_arg=args.app_id,
+        mnemonic_arg=args.mnemonic,
+    )
