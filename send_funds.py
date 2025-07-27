@@ -30,13 +30,13 @@ def wait_for_confirmation_with_timeout(client, txid, timeout=1000):
         time.sleep(1)  # Wait for 1 second before retrying
 
 
-def send_funds(private_key, to_address, amount, node_address, node_token):
+def send_funds(private_key, receiver_address, amount, node_address, node_token):
     """Connects to a node, builds a transaction, and sends it."""
     algod_client = algod.AlgodClient(node_token, node_address)
 
     public_key = account.address_from_private_key(private_key)
     print(f"Public Key: {public_key}")
-    print(f"Receiver's Address: {to_address}")
+    print(f"Receiver's Address: {receiver_address}")
 
     account_info = algod_client.account_info(public_key)
     print(f"Sender's balance before transaction: {account_info['amount']} microAlgos")
@@ -47,7 +47,7 @@ def send_funds(private_key, to_address, amount, node_address, node_token):
     random_note = random.randint(1, 10000)  # Generating a random integer as the note
     encoded_note = base64.b64encode(str(random_note).encode())
 
-    txn = PaymentTxn(public_key, params, to_address, amount, None, note=encoded_note)
+    txn = PaymentTxn(public_key, params, receiver_address, amount, None, note=encoded_note)
     signed_txn = txn.sign(private_key)
 
     txid = algod_client.send_transaction(signed_txn)
@@ -92,7 +92,7 @@ def main():
     # Call the send_funds function using the parsed arguments
     send_funds(
         private_key=example_private_key,
-        to_address=args.to_address,  # Use the value from command line or default
+        receiver_address=args.receiver_address,  # Use the value from command line or default
         amount=example_amount,
         node_address=args.node_address,  # Use the value from command line or default
         node_token=example_node_token
