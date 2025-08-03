@@ -115,7 +115,7 @@ def generate_data(
         note_inc = str(time.time()).encode()
         params1 = client1.suggested_params()
         params1.flat_fee = True
-        params1.fee = algosdk.constants.MIN_TXN_FEE  # Set fee to the minimum (1000 microAlgos)
+        params1.fee = algosdk.constants.MIN_TXN_FEE * 5  # Set fee to the minimum (1000 microAlgos)
 
         atc1.add_method_call(
             app_id=app_id,
@@ -133,7 +133,7 @@ def generate_data(
 
         # Set a fixed fee that is 1000 times the minimum transaction fee.
         params2.flat_fee = True
-        params2.fee = 1000 * algosdk.constants.MIN_TXN_FEE
+        params2.fee = algosdk.constants.MIN_TXN_FEE * 1000
 
         atc2.add_method_call(
             app_id=app_id,
