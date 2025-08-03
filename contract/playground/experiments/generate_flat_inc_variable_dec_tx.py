@@ -74,9 +74,12 @@ def generate_data(
     decrement_count = 0
 
     # Initialize lists to store data for scatter plot
-    x_values = []  # Function names
-    y_values = []  # Frequency of each function
-    colors = []  # Color of each point
+    x_values = []
+    y_values = []
+    colors = []
+
+    # NEW: Initialize list to store detailed transaction logs
+    transaction_log = []
 
     first_function = "None"
     color = ""
@@ -115,7 +118,7 @@ def generate_data(
         note_inc = str(time.time()).encode()
         params1 = client1.suggested_params()
         params1.flat_fee = True
-        params1.fee = algosdk.constants.MIN_TXN_FEE * 5  # Set fee to the minimum (1000 microAlgos)
+        params1.fee = algosdk.constants.MIN_TXN_FEE * 5
 
         atc1.add_method_call(
             app_id=app_id,
@@ -130,8 +133,6 @@ def generate_data(
         # --- Decrement Call with a fixed fee (1000x minimum) ---
         note_dec = str(time.time()).encode()
         params2 = client2.suggested_params()
-
-        # Set a fixed fee that is 1000 times the minimum transaction fee.
         params2.flat_fee = True
         params2.fee = algosdk.constants.MIN_TXN_FEE * 1000
 
@@ -152,10 +153,31 @@ def generate_data(
             txids1 = future1.result()
             txids2 = future2.result()
 
+            txid_inc = txids1[0]
+            txid_dec = txids2[0]
+
             print("txids for atc1 (increment): ", txids1)
             print("txids for atc2 (decrement): ", txids2)
-            wait_for_confirmation(client1, txids1[0])
-            wait_for_confirmation(client2, txids2[0])
+
+            # MODIFIED: Capture confirmation details for logging
+            confirmation_inc = wait_for_confirmation(client1, txid_inc)
+            confirmation_dec = wait_for_confirmation(client2, txid_dec)
+
+            # NEW: Log details for the increment transaction
+            if confirmation_inc:
+                round_inc = confirmation_inc.get('confirmed-round', 'N/A')
+                transaction_log.append({'txid': txid_inc, 'type': 'increment', 'round': round_inc})
+            else:
+                transaction_log.append(
+                    {'txid': txid_inc, 'type': 'increment', 'round': 'Failed/Rejected'})
+
+            # NEW: Log details for the decrement transaction
+            if confirmation_dec:
+                round_dec = confirmation_dec.get('confirmed-round', 'N/A')
+                transaction_log.append({'txid': txid_dec, 'type': 'decrement', 'round': round_dec})
+            else:
+                transaction_log.append(
+                    {'txid': txid_dec, 'type': 'decrement', 'round': 'Failed/Rejected'})
 
         updated_value = print_global_state(client1, app_id)
         print("After Value: ", updated_value, "\n")
@@ -164,51 +186,50 @@ def generate_data(
             print("decrement first")
             first_function = "Decrement"
             decrement_count += 1
-            color = "red"  # Assign red color for Decrement
+            color = "red"
         elif updated_value == "decrement":
             print("increment first")
             first_function = "Increment"
             increment_count += 1
             color = "blue"
 
-        # Append data to lists for scatter plot
         x_values.append(i)
         y_values.append(0) if first_function == "Increment" else y_values.append(1)
         colors.append(0) if color == "blue" else colors.append(1)
 
-    # Calculate the total number of operations
-    total_operations = increment_count + decrement_count if (increment_count + decrement_count) > 0 else 1
-
-    # Calculate the percentage of increment and decrement operations
+    total_operations = increment_count + decrement_count if (
+                                                                    increment_count + decrement_count) > 0 else 1
     percentage_increment = (increment_count / total_operations) * 100
     percentage_decrement = (decrement_count / total_operations) * 100
 
-    # After the experiment, write the data to a CSV file
     with open("experiment_data.csv", "w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(
             [
-                "Iteration",
-                "Function",
-                "Color",
-                "Increment Count",
-                "Increment Percentage",
-                "Decrement Count",
-                "Decrement Percentage",
+                "Iteration", "Function", "Color", "Increment Count",
+                "Increment Percentage", "Decrement Count", "Decrement Percentage",
             ]
         )
         for i in range(len(x_values)):
             writer.writerow(
                 [
-                    x_values[i],
-                    y_values[i],
-                    colors[i],
-                    increment_count,
-                    percentage_increment,
-                    decrement_count,
-                    percentage_decrement,
+                    x_values[i], y_values[i], colors[i], increment_count,
+                    percentage_increment, decrement_count, percentage_decrement,
                 ]
             )
+
+    # NEW: Write the detailed transaction log to a new CSV file
+    log_filename = "transaction_log.csv"
+    print(f"\nWriting detailed transaction log to {log_filename}...")
+    try:
+        with open(log_filename, "w", newline="") as file:
+            fieldnames = ['txid', 'type', 'round']
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(transaction_log)
+        print(f"Successfully wrote log to {log_filename}")
+    except IOError as e:
+        print(f"Error writing to {log_filename}: {e}")
 
 
 def submit_atc(atc, client):
@@ -216,33 +237,28 @@ def submit_atc(atc, client):
 
 
 def print_global_state(client, app_id):
-    response = client.application_info(app_id)
-    counter = None
-    for item in response["params"]["global-state"]:
-        key = base64.b64decode(item["key"]).decode("utf-8")
-        if key == "counter":
-            counter = base64.b64decode(item["value"]["bytes"]).decode("utf-8")
-            return counter
-
-
-import time
+    try:
+        response = client.application_info(app_id)
+        counter = None
+        if "global-state" in response.get("params", {}):
+            for item in response["params"]["global-state"]:
+                key = base64.b64decode(item["key"]).decode("utf-8")
+                if key == "counter":
+                    value_info = item.get("value", {})
+                    if value_info.get("type") == 1:  # type 1 is bytes
+                        counter = base64.b64decode(value_info.get("bytes", "")).decode("utf-8")
+                    return counter
+        return "Global state not found or key 'counter' missing."
+    except Exception as e:
+        print(f"Error reading global state for app {app_id}: {e}")
+        return "Error"
 
 
 def wait_for_confirmation(algod_client, txid, timeout=2, retry_delay=3):
     """
     Wait for the transaction to be confirmed or rejected.
-
-    Args:
-        algod_client (algosdk.algod.AlgodClient): Algorand client instance.
-        txid (str): Transaction ID.
-        timeout (int, optional): Maximum number of rounds to wait for confirmation. Defaults to 10.
-        retry_delay (int, optional): Delay (in seconds) between retries if a transient failure occurs. Defaults to 5.
-
     Returns:
         dict: Confirmed transaction information or None if rejected.
-
-    Raises:
-        Exception: If the transaction isn't confirmed after the timeout.
     """
     last_round = algod_client.status().get("last-round")
     current_round = last_round + 1
@@ -250,13 +266,13 @@ def wait_for_confirmation(algod_client, txid, timeout=2, retry_delay=3):
 
     while current_round <= max_round:
         try:
-            # Check if the transaction is confirmed
             transaction_info = algod_client.pending_transaction_info(txid)
-
             if (
                 "confirmed-round" in transaction_info
                 and transaction_info["confirmed-round"] > 0
             ):
+                print(
+                    f"Transaction {txid} confirmed in round {transaction_info['confirmed-round']}.")  # MODIFIED for clarity
                 return transaction_info
             elif "pool-error" in transaction_info and transaction_info["pool-error"]:
                 print(
@@ -264,25 +280,22 @@ def wait_for_confirmation(algod_client, txid, timeout=2, retry_delay=3):
                 )
                 return None
         except Exception as e:
+            # This can happen if the node has already pruned the transaction
             print(
-                f"Error checking transaction {txid}: {e}. Retrying in {retry_delay} seconds..."
-            )
-            time.sleep(retry_delay)
+                f"Could not get pending info for {txid}, assuming it was processed. Checking status after next block.")
 
-        # Print status for debugging
-        print(f"Checking for confirmation in round {current_round}...")
+        print(f"Waiting for confirmation for {txid}... Checking block {current_round}.")
 
-        # Wait for the next round
         try:
             algod_client.status_after_block(current_round)
             current_round += 1
         except Exception as e:
             print(
-                f"Error waiting for block {current_round}: {e}. Retrying in {retry_delay} seconds..."
-            )
+                f"Error waiting for block {current_round}: {e}. Retrying in {retry_delay} seconds...")
             time.sleep(retry_delay)
 
-    raise Exception(f"Transaction {txid} not confirmed after {timeout} rounds")
+    print(f"Transaction {txid} not confirmed after {timeout} rounds.")  # MODIFIED for clarity
+    return None  # MODIFIED to explicitly return None on timeout
 
 
 def print_address(mn):
@@ -296,23 +309,18 @@ if __name__ == "__main__":
         description="Run Algorand transaction experiment with optional node URLs, App ID, and Mnemonic."
     )
     parser.add_argument(
-        "--non-part-1",
-        type=str,
+        "--non-part-1", type=str,
         help="URL for the first non-participating node (e.g., http://192.168.30.4:4100)",
     )
     parser.add_argument(
-        "--non-part-2",
-        type=str,
+        "--non-part-2", type=str,
         help="URL for the second non-participating node (e.g., http://192.168.30.5:4100)",
     )
     parser.add_argument(
-        "--app-id",
-        type=int,
-        help="The ID of the application to interact with.",
+        "--app-id", type=int, help="The ID of the application to interact with."
     )
     parser.add_argument(
-        "--mnemonic",
-        type=str,
+        "--mnemonic", type=str,
         help="The mnemonic phrase of the account to sign transactions.",
     )
     args = parser.parse_args()
