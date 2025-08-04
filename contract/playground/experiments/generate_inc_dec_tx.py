@@ -104,7 +104,7 @@ def generate_data(
     print("Initial Value: ", print_global_state(client1, app_id), "\n")
     print(f"Account Address: {account.address_from_private_key(private_key)}\n")
 
-    for i in range(50):
+    for i in range(5):
         previous_value = print_global_state(client2, app_id)
         print("Previous Value:", previous_value)
         atc1 = AtomicTransactionComposer()

@@ -105,7 +105,7 @@ def generate_data(
         js = f.read()
     contract = abi.Contract.from_json(js)
 
-    for i in range(50):
+    for i in range(5):
         previous_value = print_global_state(client2, app_id)
         print("Previous Value:", previous_value)
         atc1 = AtomicTransactionComposer()
