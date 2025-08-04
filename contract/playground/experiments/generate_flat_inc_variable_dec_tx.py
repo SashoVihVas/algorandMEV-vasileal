@@ -115,7 +115,8 @@ def generate_data(
         atc2 = AtomicTransactionComposer()
 
         # --- Increment Call with Flat Minimum Fee ---
-        note_inc = str(time.time()).encode()
+        # MODIFIED: Ensure note is unique and stored
+        note_inc = f"inc_{time.time()}_{i}".encode()
         params1 = client1.suggested_params()
         params1.flat_fee = True
         params1.fee = algosdk.constants.MIN_TXN_FEE * 5
@@ -131,7 +132,8 @@ def generate_data(
         )
 
         # --- Decrement Call with a fixed fee (1000x minimum) ---
-        note_dec = str(time.time()).encode()
+        # MODIFIED: Ensure note is unique and stored
+        note_dec = f"dec_{time.time()}_{i}".encode()
         params2 = client2.suggested_params()
         params2.flat_fee = True
         params2.fee = algosdk.constants.MIN_TXN_FEE * 1000
@@ -163,21 +165,35 @@ def generate_data(
             confirmation_inc = wait_for_confirmation(client1, txid_inc)
             confirmation_dec = wait_for_confirmation(client2, txid_dec)
 
-            # NEW: Log details for the increment transaction
+            # Decode notes for CSV logging
+            note_inc_str = note_inc.decode('utf-8')
+            note_dec_str = note_dec.decode('utf-8')
+
+            # MODIFIED: Log details for the increment transaction, including the note
             if confirmation_inc:
                 round_inc = confirmation_inc.get('confirmed-round', 'N/A')
-                transaction_log.append({'txid': txid_inc, 'type': 'increment', 'round': round_inc})
+                transaction_log.append(
+                    {'txid': txid_inc, 'note': note_inc_str, 'type': 'increment',
+                     'round': round_inc}
+                )
             else:
                 transaction_log.append(
-                    {'txid': txid_inc, 'type': 'increment', 'round': 'Failed/Rejected'})
+                    {'txid': txid_inc, 'note': note_inc_str, 'type': 'increment',
+                     'round': 'Failed/Rejected'}
+                )
 
-            # NEW: Log details for the decrement transaction
+            # MODIFIED: Log details for the decrement transaction, including the note
             if confirmation_dec:
                 round_dec = confirmation_dec.get('confirmed-round', 'N/A')
-                transaction_log.append({'txid': txid_dec, 'type': 'decrement', 'round': round_dec})
+                transaction_log.append(
+                    {'txid': txid_dec, 'note': note_dec_str, 'type': 'decrement',
+                     'round': round_dec}
+                )
             else:
                 transaction_log.append(
-                    {'txid': txid_dec, 'type': 'decrement', 'round': 'Failed/Rejected'})
+                    {'txid': txid_dec, 'note': note_dec_str, 'type': 'decrement',
+                     'round': 'Failed/Rejected'}
+                )
 
         updated_value = print_global_state(client1, app_id)
         print("After Value: ", updated_value, "\n")
@@ -198,7 +214,7 @@ def generate_data(
         colors.append(0) if color == "blue" else colors.append(1)
 
     total_operations = increment_count + decrement_count if (
-                                                                    increment_count + decrement_count) > 0 else 1
+                                                                increment_count + decrement_count) > 0 else 1
     percentage_increment = (increment_count / total_operations) * 100
     percentage_decrement = (decrement_count / total_operations) * 100
 
@@ -218,12 +234,13 @@ def generate_data(
                 ]
             )
 
-    # NEW: Write the detailed transaction log to a new CSV file
+    # MODIFIED: Write the detailed transaction log to a new CSV file
     log_filename = "transaction_log.csv"
     print(f"\nWriting detailed transaction log to {log_filename}...")
     try:
         with open(log_filename, "w", newline="") as file:
-            fieldnames = ['txid', 'type', 'round']
+            # MODIFIED: Add 'note' to the header in the desired order
+            fieldnames = ['txid', 'note', 'type', 'round']
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(transaction_log)
