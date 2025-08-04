@@ -58,7 +58,7 @@ def demo() -> None:
     parser.add_argument(
         '--node-address',
         type=str,
-        default="http://192.168.30.2:4100",
+        default="http://10.1.1.1:4100",
         help="The address of the Algorand node."
     )
 

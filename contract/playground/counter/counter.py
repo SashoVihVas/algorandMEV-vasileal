@@ -62,7 +62,7 @@ def demo() -> None:
     headers = {
         "Authorization": "Bearer 97361fdc801fe9fd7f2ae87fa4ea5dc8b9b6ce7380c230eaf5494c4cb5d38d61"
     }
-    address = "http://192.168.30.2:4100" #"https://testnet-algorand.api.purestake.io/ps2"
+    address = "http://10.1.1.1:4100" #"https://testnet-algorand.api.purestake.io/ps2"
     # demonstration purposes only, never use mnemonics in code
     mnemonic_1 = "rifle door book aim slogan joke load hair athlete shock castle lion speed rocket distance spawn add badge genius zero chef enforce suffer absent frost"
     client = algod.AlgodClient(token, address, headers)

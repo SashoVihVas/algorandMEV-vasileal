@@ -157,7 +157,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--algod-address',
-        default='http://192.168.30.2:4100',
+        default='http://10.1.1.1:4100',
         help='The address of the Algorand node to connect to.'
     )
     parser.add_argument(

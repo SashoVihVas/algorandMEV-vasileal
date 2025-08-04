@@ -327,11 +327,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--non-part-1", type=str,
-        help="URL for the first non-participating node (e.g., http://192.168.30.4:4100)",
+        help="URL for the first non-participating node (e.g., http://10.1.3.1:4100)",
     )
     parser.add_argument(
         "--non-part-2", type=str,
-        help="URL for the second non-participating node (e.g., http://192.168.30.5:4100)",
+        help="URL for the second non-participating node (e.g., http://10.1.4.1:4100)",
     )
     parser.add_argument(
         "--app-id", type=int, help="The ID of the application to interact with."
