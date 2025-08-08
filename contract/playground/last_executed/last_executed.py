@@ -78,14 +78,12 @@ def demo() -> None:
     algod_address = args.node_address
     account_mnemonic = args.mnemonic
 
-    # These values can remain hardcoded or moved to arguments as well
-    token = ""
-    headers = {
-        "Authorization": "Bearer 97361fdc801fe9fd7f2ae87fa4ea5dc8b9b6ce7380c230eaf5494c4cb5d38d61"
-    }
+    # Define the API token directly
+    token = "97361fdc801fe9fd7f2ae87fa4ea5dc8b9b6ce7380c230eaf5494c4cb5d38d61"
 
     # --- Client and Account Setup ---
-    client = algod.AlgodClient(token, algod_address, headers)
+    # Initialize the client correctly: (token, address). No custom headers needed.
+    client = algod.AlgodClient(token, algod_address)
     private_key = mnemonic.to_private_key(account_mnemonic)
     signer = AccountTransactionSigner(private_key)
     sender_address = account.address_from_private_key(private_key)
