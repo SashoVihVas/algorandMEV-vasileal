@@ -50,7 +50,6 @@ def create_algod_client_from_url(url: str) -> algod.AlgodClient:
     }
     return algod.AlgodClient(algod_token, url, algod_headers)
 
-
 def generate_data(
     non_part_1_url: str | None = None,
     non_part_2_url: str | None = None,
@@ -105,7 +104,7 @@ def generate_data(
         js = f.read()
     contract = abi.Contract.from_json(js)
 
-    for i in range(500):
+    for i in range(100):
         previous_value = print_global_state(client2, app_id)
         print("Previous Value:", previous_value)
         atc1 = AtomicTransactionComposer()
