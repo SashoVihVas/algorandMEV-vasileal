@@ -152,9 +152,9 @@ def generate_data(
         # # proposer_2 = get_block_proposer(client2, confirmed_round_2)
 
         proposers_1.append(proposer_1)
-        proposers_2.append(proposer_2)
+        # proposers_2.append(proposer_2)
         confirmed_rounds_1.append(confirmed_round_1)
-        confirmed_rounds_2.append(confirmed_round_2)
+        # confirmed_rounds_2.append(confirmed_round_2)
 
         # proposers_1.append(proposer_1)
         # proposers_2.append(proposer_2)
@@ -204,8 +204,8 @@ def generate_data(
                 "Decrement Percentage",
                 "Proposer 1",
                 "confirmed_round_1",
-                "Proposer 2",
-                "confirmed_round_2"
+                # "Proposer 2",
+                # "confirmed_round_2"
             ]
         )
         for i in range(len(x_values)):
@@ -220,8 +220,8 @@ def generate_data(
                     percentage_decrement,
                     proposers_1[i],  # Use data from the list
                     confirmed_rounds_1[i],  # Use data from the list
-                    proposers_2[i],         # Use data from the list
-                    confirmed_rounds_2[i]   # Use data from the list
+                    # proposers_2[i],         # Use data from the list
+                    # confirmed_rounds_2[i]   # Use data from the list
                 ]
             )
 
