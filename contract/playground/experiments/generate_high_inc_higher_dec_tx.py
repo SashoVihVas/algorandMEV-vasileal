@@ -3,7 +3,6 @@ import pathlib
 import sys
 import os
 
-# Add the 'contract' directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 import time
@@ -35,13 +34,12 @@ from playground.experiments.utils import (
 from dotenv import load_dotenv
 import csv
 
-load_dotenv()  # take environment variables from .env.
+load_dotenv()
 
 
 def create_algod_client_from_url(url: str) -> algod.AlgodClient:
     """Creates an AlgodClient instance from a given URL."""
     algod_token = ""
-    # Assuming the same auth token for custom URLs as in your utils
     algod_headers = {
         "Authorization": "Bearer 97361fdc801fe9fd7f2ae87fa4ea5dc8b9b6ce7380c230eaf5494c4cb5d38d61"
     }
@@ -54,11 +52,9 @@ def generate_data(
     app_id_arg: int | None = None,
     mnemonic_arg: str | None = None,
 ):
-    # Define default values
     default_mnemonic = "kitchen subway tomato hire inspire pepper camera frog about kangaroo bunker express length song act oven world quality around elegant lion chimney enough ability prepare"
     default_app_id = 1002
 
-    # Use provided arguments or fall back to defaults
     mnemonic_1 = mnemonic_arg if mnemonic_arg is not None else default_mnemonic
     app_id = app_id_arg if app_id_arg is not None else default_app_id
 
@@ -69,16 +65,13 @@ def generate_data(
 
     private_key = mnemonic.to_private_key(mnemonic_1)
 
-    # Initialize counters for increment and decrement functions
     increment_count = 0
     decrement_count = 0
 
-    # Initialize lists to store data for scatter plot
     x_values = []
     y_values = []
     colors = []
 
-    # NEW: Initialize list to store detailed transaction logs
     transaction_log = []
 
     first_function = "None"
@@ -109,13 +102,12 @@ def generate_data(
     print(f"Account Address: {account.address_from_private_key(private_key)}\n")
 
     for i in range(100):
+        print(f"\n--- Iteration {i} ---")
         previous_value = print_global_state(client2, app_id)
         print("Previous Value:", previous_value)
         atc1 = AtomicTransactionComposer()
         atc2 = AtomicTransactionComposer()
 
-        # --- Increment Call with Flat Minimum Fee ---
-        # MODIFIED: Ensure note is unique and stored
         note_inc = f"inc_{time.time()}_{i}".encode()
         params1 = client1.suggested_params()
         params1.flat_fee = True
@@ -131,8 +123,6 @@ def generate_data(
             signer=AccountTransactionSigner(private_key),
         )
 
-        # --- Decrement Call with a fixed fee (1000x minimum) ---
-        # MODIFIED: Ensure note is unique and stored
         note_dec = f"dec_{time.time()}_{i}".encode()
         params2 = client2.suggested_params()
         params2.flat_fee = True
@@ -148,63 +138,78 @@ def generate_data(
             signer=AccountTransactionSigner(private_key),
         )
 
+        try:
+            current_round = client1.status().get("last-round")
+        except Exception:
+            current_round = "N/A"
+
+
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future2 = executor.submit(submit_atc, atc2, client2)
             future1 = executor.submit(submit_atc, atc1, client1)
+            future2 = executor.submit(submit_atc, atc2, client2)
 
-            txids1 = future1.result()
-            txids2 = future2.result()
+            success_inc, result_inc = future1.result()
+            success_dec, result_dec = future2.result()
 
-            txid_inc = txids1[0]
-            txid_dec = txids2[0]
+        note_inc_str = note_inc.decode('utf-8')
+        note_dec_str = note_dec.decode('utf-8')
 
-            print("txids for atc1 (increment): ", txids1)
-            print("txids for atc2 (decrement): ", txids2)
-
-            # MODIFIED: Capture confirmation details for logging
+        if success_inc:
+            txid_inc = result_inc[0]
+            print(f"Increment submitted successfully: {txid_inc}")
             confirmation_inc = wait_for_confirmation(client1, txid_inc)
-            confirmation_dec = wait_for_confirmation(client2, txid_dec)
-
-            # Decode notes for CSV logging
-            note_inc_str = note_inc.decode('utf-8')
-            note_dec_str = note_dec.decode('utf-8')
-
-            # MODIFIED: Log details for the increment transaction, including the note
             if confirmation_inc:
                 round_inc = confirmation_inc.get('confirmed-round', 'N/A')
                 transaction_log.append(
                     {'txid': txid_inc, 'note': note_inc_str, 'type': 'increment',
-                     'round': round_inc}
+                     'status': 'Confirmed', 'round': round_inc}
                 )
             else:
                 transaction_log.append(
                     {'txid': txid_inc, 'note': note_inc_str, 'type': 'increment',
-                     'round': 'Failed/Rejected'}
+                     'status': 'Not Confirmed', 'round': f'Timed out after round {current_round}'}
                 )
+        else:
+            error_message = result_inc
+            print(f"Increment submission failed: {error_message}")
+            transaction_log.append(
+                {'txid': 'N/A', 'note': note_inc_str, 'type': 'increment',
+                 'status': f'Submission Failed: {error_message}', 'round': current_round}
+            )
 
-            # MODIFIED: Log details for the decrement transaction, including the note
+        if success_dec:
+            txid_dec = result_dec[0]
+            print(f"Decrement submitted successfully: {txid_dec}")
+            confirmation_dec = wait_for_confirmation(client2, txid_dec)
             if confirmation_dec:
                 round_dec = confirmation_dec.get('confirmed-round', 'N/A')
                 transaction_log.append(
                     {'txid': txid_dec, 'note': note_dec_str, 'type': 'decrement',
-                     'round': round_dec}
+                     'status': 'Confirmed', 'round': round_dec}
                 )
             else:
                 transaction_log.append(
                     {'txid': txid_dec, 'note': note_dec_str, 'type': 'decrement',
-                     'round': 'Failed/Rejected'}
+                     'status': 'Not Confirmed', 'round': f'Timed out after round {current_round}'}
                 )
+        else:
+            error_message = result_dec
+            print(f"Decrement submission failed: {error_message}")
+            transaction_log.append(
+                {'txid': 'N/A', 'note': note_dec_str, 'type': 'decrement',
+                 'status': f'Submission Failed: {error_message}', 'round': current_round}
+            )
 
         updated_value = print_global_state(client1, app_id)
-        print("After Value: ", updated_value, "\n")
+        print("After Value: ", updated_value)
 
         if updated_value == "increment":
-            print("decrement first")
+            print("Decrement won the race.")
             first_function = "Decrement"
             decrement_count += 1
             color = "red"
         elif updated_value == "decrement":
-            print("increment first")
+            print("Increment won the race.")
             first_function = "Increment"
             increment_count += 1
             color = "blue"
@@ -234,13 +239,11 @@ def generate_data(
                 ]
             )
 
-    # MODIFIED: Write the detailed transaction log to a new CSV file
     log_filename = "transaction_log.csv"
     print(f"\nWriting detailed transaction log to {log_filename}...")
     try:
         with open(log_filename, "w", newline="") as file:
-            # MODIFIED: Add 'note' to the header in the desired order
-            fieldnames = ['txid', 'note', 'type', 'round']
+            fieldnames = ['txid', 'note', 'type', 'status', 'round']
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(transaction_log)
@@ -250,7 +253,16 @@ def generate_data(
 
 
 def submit_atc(atc, client):
-    return atc.submit(client)
+    """
+    Submits an AtomicTransactionComposer object.
+    Returns:
+        tuple: (True, txids) on success, (False, error_message) on failure.
+    """
+    try:
+        result = atc.submit(client)
+        return True, result
+    except Exception as e:
+        return False, str(e)
 
 
 def print_global_state(client, app_id):
@@ -271,11 +283,10 @@ def print_global_state(client, app_id):
         return "Error"
 
 
-def wait_for_confirmation(algod_client, txid, timeout=2, retry_delay=3):
+def wait_for_confirmation(algod_client, txid, timeout=4):
     """
-    Wait for the transaction to be confirmed or rejected.
-    Returns:
-        dict: Confirmed transaction information or None if rejected.
+    Waits for a transaction to be confirmed.
+    Returns the transaction information dict on success, or None on failure/timeout.
     """
     last_round = algod_client.status().get("last-round")
     current_round = last_round + 1
@@ -283,36 +294,21 @@ def wait_for_confirmation(algod_client, txid, timeout=2, retry_delay=3):
 
     while current_round <= max_round:
         try:
-            transaction_info = algod_client.pending_transaction_info(txid)
-            if (
-                "confirmed-round" in transaction_info
-                and transaction_info["confirmed-round"] > 0
-            ):
-                print(
-                    f"Transaction {txid} confirmed in round {transaction_info['confirmed-round']}.")  # MODIFIED for clarity
-                return transaction_info
-            elif "pool-error" in transaction_info and transaction_info["pool-error"]:
-                print(
-                    f"Transaction {txid} rejected with error: {transaction_info['pool-error']}"
-                )
+            tx_info = algod_client.pending_transaction_info(txid)
+            if tx_info.get("confirmed-round", 0) > 0:
+                print(f"Transaction {txid} confirmed in round {tx_info['confirmed-round']}.")
+                return tx_info
+            if tx_info.get("pool-error"):
+                print(f"Transaction {txid} rejected with error: {tx_info['pool-error']}")
                 return None
-        except Exception as e:
-            # This can happen if the node has already pruned the transaction
-            print(
-                f"Could not get pending info for {txid}, assuming it was processed. Checking status after next block.")
+        except Exception:
+            pass
 
-        print(f"Waiting for confirmation for {txid}... Checking block {current_round}.")
+        algod_client.status_after_block(current_round)
+        current_round += 1
 
-        try:
-            algod_client.status_after_block(current_round)
-            current_round += 1
-        except Exception as e:
-            print(
-                f"Error waiting for block {current_round}: {e}. Retrying in {retry_delay} seconds...")
-            time.sleep(retry_delay)
-
-    print(f"Transaction {txid} not confirmed after {timeout} rounds.")  # MODIFIED for clarity
-    return None  # MODIFIED to explicitly return None on timeout
+    print(f"Transaction {txid} not confirmed after {timeout} rounds.")
+    return None
 
 
 def print_address(mn):
