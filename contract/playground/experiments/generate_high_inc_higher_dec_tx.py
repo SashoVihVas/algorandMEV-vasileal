@@ -118,8 +118,6 @@ def generate_data(
         # MODIFIED: Ensure note is unique and stored
         note_inc = f"inc_{time.time()}_{i}".encode()
         params1 = client1.suggested_params()
-        params1.flat_fee = True
-        params1.fee = algosdk.constants.MIN_TXN_FEE * 5
 
         atc1.add_method_call(
             app_id=app_id,
@@ -136,7 +134,7 @@ def generate_data(
         note_dec = f"dec_{time.time()}_{i}".encode()
         params2 = client2.suggested_params()
         params2.flat_fee = True
-        params2.fee = algosdk.constants.MIN_TXN_FEE * 1000
+        params2.fee = algosdk.constants.MIN_TXN_FEE * 10
 
         atc2.add_method_call(
             app_id=app_id,
