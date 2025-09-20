@@ -2,9 +2,8 @@ import sys
 import os
 import pathlib
 import base64
-import argparse  # Import the argparse library
+import argparse
 
-# Add the 'contract' directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 import pyteal as pt
@@ -50,11 +49,8 @@ def decrement(*, output: pt.abi.String) -> pt.Expr:
 
 
 def demo() -> None:
-    # --- Argument Parsing ---
-    # Set up the argument parser to handle command-line inputs
     parser = argparse.ArgumentParser(description="Deploy and interact with a Beaker application.")
 
-    # Add argument for the node's address with a default value
     parser.add_argument(
         '--node-address',
         type=str,
@@ -62,7 +58,6 @@ def demo() -> None:
         help="The address of the Algorand node."
     )
 
-    # Add argument for the account mnemonic with a default value
     parser.add_argument(
         '--mnemonic',
         type=str,
@@ -70,28 +65,20 @@ def demo() -> None:
         help="The mnemonic of the account to use. For demonstration purposes only."
     )
 
-    # Parse the arguments provided at runtime
     args = parser.parse_args()
 
-    # --- Configuration ---
-    # Use the parsed arguments or their default values
     algod_address = args.node_address
     account_mnemonic = args.mnemonic
 
-    # Define the API token directly
     token = "97361fdc801fe9fd7f2ae87fa4ea5dc8b9b6ce7380c230eaf5494c4cb5d38d61"
 
-    # --- Client and Account Setup ---
-    # Initialize the client correctly: (token, address). No custom headers needed.
     client = algod.AlgodClient(token, algod_address)
     private_key = mnemonic.to_private_key(account_mnemonic)
     signer = AccountTransactionSigner(private_key)
     sender_address = account.address_from_private_key(private_key)
     print(f"Using Account Address: {sender_address}")
 
-    # --- Application Deployment and Interaction ---
     try:
-        # Create an Application client
         app_client = ApplicationClient(
             client=client,
             app=last_executed,
@@ -99,7 +86,6 @@ def demo() -> None:
         )
 
         print("Creating and deploying the application...")
-        # Create and deploy the application on-chain
         app_id, app_addr, txid = app_client.create()
         print(
             f"Successfully Created App!\n"

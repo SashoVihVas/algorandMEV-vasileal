@@ -3,7 +3,6 @@ import pathlib
 import sys
 import os
 
-# Add the 'contract' directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 import time
@@ -40,7 +39,6 @@ load_dotenv()  # take environment variables from .env.
 def create_algod_client_from_url(url: str) -> algod.AlgodClient:
     """Creates an AlgodClient instance from a given URL."""
     algod_token = ""
-    # Assuming the same auth token for custom URLs as in your utils
     algod_headers = {
         "Authorization": "Bearer 97361fdc801fe9fd7f2ae87fa4ea5dc8b9b6ce7380c230eaf5494c4cb5d38d61"
     }
@@ -53,11 +51,9 @@ def generate_data(
     app_id_arg: int | None = None,
     mnemonic_arg: str | None = None,
 ):
-    # Define default values
     default_mnemonic = "kitchen subway tomato hire inspire pepper camera frog about kangaroo bunker express length song act oven world quality around elegant lion chimney enough ability prepare"
     default_app_id = 1002
 
-    # Use provided arguments or fall back to defaults
     mnemonic_1 = mnemonic_arg if mnemonic_arg is not None else default_mnemonic
     app_id = app_id_arg if app_id_arg is not None else default_app_id
 
@@ -68,14 +64,12 @@ def generate_data(
 
     private_key = mnemonic.to_private_key(mnemonic_1)
 
-    # Initialize counters for increment and decrement functions
     increment_count = 0
     decrement_count = 0
 
-    # Initialize lists to store data for scatter plot
-    x_values = []  # Function names
-    y_values = []  # Frequency of each function
-    colors = []  # Color of each point
+    x_values = []
+    y_values = []
+    colors = []
 
     first_function = "None"
     color = ""
@@ -109,7 +103,7 @@ def generate_data(
         print("Previous Value:", previous_value)
         atc1 = AtomicTransactionComposer()
         atc2 = AtomicTransactionComposer()
-        note = str(time.time()).encode()  # Using the current timestamp as a note
+        note = str(time.time()).encode()
         atc1.add_method_call(
             app_id=app_id,
             method=contract.get_method_by_name("increment"),
@@ -120,7 +114,7 @@ def generate_data(
             signer=AccountTransactionSigner(private_key),
         )
 
-        note = str(time.time()).encode()  # Using the current timestamp as a note
+        note = str(time.time()).encode()
         params2 = client2.suggested_params()
         params2.flat_fee = True
         params2.fee = 10000
@@ -137,7 +131,6 @@ def generate_data(
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future2 = executor.submit(submit_atc, atc2, client2)
             future1 = executor.submit(submit_atc, atc1, client1)
-            # time.sleep(0.1)
 
             txids1 = future1.result()
             txids2 = future2.result()
@@ -154,26 +147,22 @@ def generate_data(
             print("decrement first")
             first_function = "Decrement"
             decrement_count += 1
-            color = "red"  # Assign red color for Decrement
+            color = "red"
         elif updated_value == "decrement":
             print("increment first")
             first_function = "Increment"
             increment_count += 1
             color = "blue"
 
-        # Append data to lists for scatter plot
         x_values.append(i)
         y_values.append(0) if first_function == "Increment" else y_values.append(1)
         colors.append(0) if color == "blue" else colors.append(1)
 
-    # Calculate the total number of operations
     total_operations = increment_count + decrement_count
 
-    # Calculate the percentage of increment and decrement operations
     percentage_increment = (increment_count / total_operations) * 100
     percentage_decrement = (decrement_count / total_operations) * 100
 
-    # After the experiment, write the data to a CSV file
     with open("experiment_data.csv", "w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(
@@ -219,28 +208,13 @@ import time
 
 
 def wait_for_confirmation(algod_client, txid, timeout=2, retry_delay=3):
-    """
-    Wait for the transaction to be confirmed or rejected.
 
-    Args:
-        algod_client (algosdk.algod.AlgodClient): Algorand client instance.
-        txid (str): Transaction ID.
-        timeout (int, optional): Maximum number of rounds to wait for confirmation. Defaults to 10.
-        retry_delay (int, optional): Delay (in seconds) between retries if a transient failure occurs. Defaults to 5.
-
-    Returns:
-        dict: Confirmed transaction information or None if rejected.
-
-    Raises:
-        Exception: If the transaction isn't confirmed after the timeout.
-    """
     last_round = algod_client.status().get("last-round")
     current_round = last_round + 1
     max_round = last_round + timeout
 
     while current_round <= max_round:
         try:
-            # Check if the transaction is confirmed
             transaction_info = algod_client.pending_transaction_info(txid)
 
             if (
@@ -259,10 +233,8 @@ def wait_for_confirmation(algod_client, txid, timeout=2, retry_delay=3):
             )
             time.sleep(retry_delay)
 
-        # Print status for debugging
         print(f"Checking for confirmation in round {current_round}...")
 
-        # Wait for the next round
         try:
             algod_client.status_after_block(current_round)
             current_round += 1

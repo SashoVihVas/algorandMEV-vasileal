@@ -4,11 +4,10 @@ from algosdk.v2client import algod
 import random
 import base64
 import time
-import argparse  # Import the argparse library
+import argparse
 
 
 def wait_for_confirmation_with_timeout(client, txid, timeout=1000):
-    """Waits for a transaction to be confirmed with a timeout."""
     start_time = time.time()
 
     while True:
@@ -17,7 +16,6 @@ def wait_for_confirmation_with_timeout(client, txid, timeout=1000):
             print(f"Transaction confirmation timed out after {timeout} seconds")
             return None
 
-        # Check the transaction status
         try:
             pending_txn = client.pending_transaction_info(txid)
         except Exception as e:
@@ -27,11 +25,10 @@ def wait_for_confirmation_with_timeout(client, txid, timeout=1000):
         if 'confirmed-round' in pending_txn:
             return pending_txn['confirmed-round']
 
-        time.sleep(1)  # Wait for 1 second before retrying
+        time.sleep(1)
 
 
 def send_funds(private_key, receiver_address, amount, node_address, node_token):
-    """Connects to a node, builds a transaction, and sends it."""
     algod_client = algod.AlgodClient(node_token, node_address)
 
     public_key = account.address_from_private_key(private_key)
@@ -44,7 +41,7 @@ def send_funds(private_key, receiver_address, amount, node_address, node_token):
     params = algod_client.suggested_params()
     print(f"Suggested Params: {params}")
 
-    random_note = random.randint(1, 10000)  # Generating a random integer as the note
+    random_note = random.randint(1, 10000)
     encoded_note = base64.b64encode(str(random_note).encode())
 
     txn = PaymentTxn(public_key, params, receiver_address, amount, None, note=encoded_note)
@@ -62,10 +59,8 @@ def send_funds(private_key, receiver_address, amount, node_address, node_token):
 
 
 def main():
-    # Set up the argument parser
     parser = argparse.ArgumentParser(description="Send Algorand funds to a specified address.")
 
-    # Add argument for the receiver's address with a default value
     parser.add_argument(
         '--receiver-address',
         type=str,
@@ -73,7 +68,6 @@ def main():
         help="The Algorand address to send funds to."
     )
 
-    # Add argument for the node's address with a default value
     parser.add_argument(
         '--node-address',
         type=str,
@@ -81,20 +75,17 @@ def main():
         help="The address of the Algorand participation node."
     )
 
-    # Parse the arguments from the command line
     args = parser.parse_args()
 
-    # Define the other transaction parameters
     example_private_key = "UK790krMFIp90Z02KuuLk+g6O5GOnQwSBYyqqMCw/w/z03/UuY2YCWL3xuu8RXC13ybK5QauZ+2hkgh+ZM2y/A=="
     example_amount = 2000000000
     example_node_token = "97361fdc801fe9fd7f2ae87fa4ea5dc8b9b6ce7380c230eaf5494c4cb5d38d61"
 
-    # Call the send_funds function using the parsed arguments
     send_funds(
         private_key=example_private_key,
-        receiver_address=args.receiver_address,  # Use the value from command line or default
+        receiver_address=args.receiver_address,
         amount=example_amount,
-        node_address=args.node_address,  # Use the value from command line or default
+        node_address=args.node_address,
         node_token=example_node_token
     )
 

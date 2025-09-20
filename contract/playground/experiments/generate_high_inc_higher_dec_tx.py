@@ -101,7 +101,7 @@ def generate_data(
     print("Initial Value: ", print_global_state(client1, app_id), "\n")
     print(f"Account Address: {account.address_from_private_key(private_key)}\n")
 
-    for i in range(20):
+    for i in range(100):
         print(f"\n--- Iteration {i} ---")
         previous_value = print_global_state(client2, app_id)
         print("Previous Value:", previous_value)
